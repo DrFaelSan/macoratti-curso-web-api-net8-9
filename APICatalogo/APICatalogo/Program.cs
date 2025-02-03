@@ -24,6 +24,9 @@ builder.Services.AddSwaggerGen();
 builder.Services.AddScoped<ApiLoggingFilter>();
 builder.Services.AddScoped<ICategoriaRepository, CategoriaRepository>();
 builder.Services.AddScoped<IProdutoRepository, ProdutoRepository>();
+builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
+builder.Services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
+
 
 string strConnection = builder.Configuration.GetConnectionString("DefaultConnection") ?? "";
 
