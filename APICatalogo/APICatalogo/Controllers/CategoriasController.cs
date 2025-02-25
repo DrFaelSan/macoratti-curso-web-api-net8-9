@@ -5,6 +5,7 @@ using APICatalogo.Models;
 using APICatalogo.Pagination;
 using APICatalogo.Repositories;
 using AutoMapper;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
 using X.PagedList;
@@ -26,6 +27,7 @@ public class CategoriasController : ControllerBase
 
     [HttpGet]
     [ServiceFilter(typeof(ApiLoggingFilter))]
+    [Authorize(Policy = "UserOnly")]
     public async Task<ActionResult<IEnumerable<CategoriaDTO>>> GetCategoriasProdutosAsync()
     {
         var categorias = await _uof.CategoriaRepository.GetAllAsync();
@@ -109,6 +111,7 @@ public class CategoriasController : ControllerBase
     }
 
     [HttpDelete("{id:int:min(1)}")]
+    [Authorize(Policy ="AdminOnly")]
     public async Task<ActionResult<CategoriaDTO>> DeleteAsync(int id)
     {
 
