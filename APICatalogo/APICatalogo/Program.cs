@@ -5,6 +5,7 @@ using APICatalogo.Extensions;
 using APICatalogo.Filters;
 using APICatalogo.Logging;
 using APICatalogo.Models;
+using APICatalogo.RateLimitOptions;
 using APICatalogo.Repositories;
 using APICatalogo.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -14,6 +15,7 @@ using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using System.Text;
 using System.Text.Json.Serialization;
+using System.Threading.RateLimiting;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -57,6 +59,7 @@ builder.Services.AddSwaggerGen(c =>
         }
     });
 });
+
 builder.Services.Configure<JwtSection>(builder.Configuration.GetSection("Jwt"));
 
 var secretKey = builder.Configuration["Jwt:SecretKey"] ?? "sa31231dada#!@#!s-1dasdas@!#!1231-sdad@!#@!a2113-313#@!#121";
@@ -82,6 +85,26 @@ builder.Services.AddAuthentication(options =>
         ValidIssuer = builder.Configuration["Jwt:ValidIssuer"],
         IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secretKey ))
     };
+});
+
+var rateLimiteOptions = new RateLimiteOptions();
+builder.Configuration.GetSection(RateLimiteOptions.RateLimitSection).Bind(rateLimiteOptions);
+
+builder.Services.AddRateLimiter(raterLimiterOptions =>
+{
+    raterLimiterOptions.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+    raterLimiterOptions.GlobalLimiter = PartitionedRateLimiter.Create<HttpContext, string>(httpContext =>
+        RateLimitPartition.GetFixedWindowLimiter(
+                partitionKey: httpContext.User.Identity.Name ??
+                    httpContext.Request.Headers.Host.ToString(),
+                factory: partition => new FixedWindowRateLimiterOptions
+                {
+                    PermitLimit = rateLimiteOptions.PermitLimit,
+                    Window = TimeSpan.FromSeconds(rateLimiteOptions.Window),
+                    QueueLimit = rateLimiteOptions.QueueLimit,
+                    QueueProcessingOrder = QueueProcessingOrder.OldestFirst,
+                    AutoReplenishment = rateLimiteOptions.AutoReplenishment
+                }));
 });
 
 builder.Services.AddScoped<ApiLoggingFilter>();
@@ -118,6 +141,19 @@ builder.Services.AddDbContext<AppDbContext>(options => options.UseSqlServer(strC
 
 builder.Logging.AddProvider(new CustomLoggerProvider(new CustomLoggerProviderConfiguration { LogLevel = LogLevel.Information }));
 
+var origensComAcessoPermitido = "_origensComAcessoPermitido";
+
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy(name: origensComAcessoPermitido, policy =>
+    {
+        policy.WithOrigins("https://apirequest.io/")
+        .WithMethods("GET", "POST")
+        .AllowAnyHeader()
+        .AllowCredentials();
+    });
+});
+
 var app = builder.Build();
 
 if (app.Environment.IsDevelopment())
@@ -132,7 +168,12 @@ else
 }
 
 app.UseHttpsRedirection();
+app.UseStaticFiles();
+app.UseRouting();
+
+app.UseRateLimiter();
+app.UseCors(origensComAcessoPermitido);
+
 app.UseAuthorization();
-app.UseAuthentication();
 app.MapControllers();
 app.Run();
