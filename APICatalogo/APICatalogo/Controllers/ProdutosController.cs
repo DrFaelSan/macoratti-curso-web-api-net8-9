@@ -30,6 +30,12 @@ public class ProdutosController : ControllerBase
         _sieveProcessor = sieveProcessor;
     }
 
+    public ProdutosController(IUnitOfWork repository, IMapper mapper)
+    {
+        _uof = repository;
+        _mapper = mapper;
+    }
+
     [HttpGet("produtos-categoria/{id:int}")]
     public async Task<ActionResult<IEnumerable<ProdutoDTO>>> GetProdutosCategoriaAsync(int id)
     {
@@ -98,9 +104,12 @@ public class ProdutosController : ControllerBase
     ///<param name="id">Código do produto</param>
     ///<returns>Um objeto Produto</returns>
 
-    [HttpGet("{id:int:min(1)}", Name = "ObterProduto")]
-    public async Task<ActionResult<ProdutoDTO>> GetAsync(int id)
+    [HttpGet("{id}", Name = "ObterProduto")]
+    public async Task<ActionResult<ProdutoDTO>> GetAsync(int? id)
     {
+        if (id == null || id <= 0)
+            return BadRequest("ID de produto inválido");
+
         var produto = await _uof.ProdutoRepository.GetAsync(p => p.Id == id);
         var produtoDTO = _mapper.Map<ProdutoDTO>(produto);
         return produtoDTO is null ? NotFound($"Produto com id={id} não encontrado") : Ok(produtoDTO);
@@ -172,7 +181,7 @@ public class ProdutosController : ControllerBase
     {
         var produto = await _uof.ProdutoRepository.GetAsync(p => p.Id == id);
         if (produto is null)
-            NotFound($"Produto com id={id} não encontrado");
+            return NotFound($"Produto com id={id} não encontrado");
 
         var produtoDeletado = _uof.ProdutoRepository.Delete(produto);
         var produtoDeletadoDto = _mapper.Map<ProdutoDTO>(produto);

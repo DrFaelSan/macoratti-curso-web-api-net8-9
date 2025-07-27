@@ -2,16 +2,11 @@
 
 namespace APICatalogo.Repositories;
 
-public class UnitOfWork : IUnitOfWork
+public class UnitOfWork(AppDbContext context) : IUnitOfWork
 {
     private IProdutoRepository? _produtoRepo;
     private ICategoriaRepository? _categoriaRepo;
-    public AppDbContext _context;
-
-    public UnitOfWork(AppDbContext context)
-    {
-        _context = context;
-    }
+    public AppDbContext _context = context;
 
     public IProdutoRepository ProdutoRepository
     {
