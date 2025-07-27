@@ -5,7 +5,6 @@ using APICatalogo.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Rewrite;
 using Microsoft.Extensions.Options;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
@@ -14,6 +13,7 @@ namespace APICatalogo.Controllers;
 
 [Route("api/[controller]")]
 [ApiController]
+[ApiExplorerSettings(IgnoreApi = true)]
 public class AuthController : ControllerBase
 {
     private readonly ITokenService _tokenService;
