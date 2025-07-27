@@ -16,6 +16,7 @@ namespace APICatalogo.Controllers;
 [Route("[controller]")]
 [ApiController]
 [Produces("application/json")]
+[ApiExplorerSettings(IgnoreApi = true)]
 public class CategoriasController : ControllerBase
 {
     private readonly IUnitOfWork _uof;
