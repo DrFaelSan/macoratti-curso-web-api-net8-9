@@ -13,6 +13,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
+using System.Reflection;
 using System.Text;
 using System.Text.Json.Serialization;
 using System.Threading.RateLimiting;
@@ -30,11 +31,11 @@ builder.Services.AddControllers(options =>
 }).AddNewtonsoftJson();
 
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen(c => 
+builder.Services.AddSwaggerGen(options => 
 {
-    c.SwaggerDoc("v1",new OpenApiInfo {  Title = "ApiCatalogo", Version = "v1" });
+    options.SwaggerDoc("v1",new OpenApiInfo {  Title = "ApiCatalogo", Version = "v1" });
 
-    c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme()
+    options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme()
     {
         Name = "Authorization",
         Type = SecuritySchemeType.ApiKey,
@@ -44,7 +45,7 @@ builder.Services.AddSwaggerGen(c =>
         Description = "Bearer JWT Token ex.: Bearer <token>."
     });
 
-    c.AddSecurityRequirement(new OpenApiSecurityRequirement
+    options.AddSecurityRequirement(new OpenApiSecurityRequirement
     {
         {
             new OpenApiSecurityScheme
@@ -58,6 +59,9 @@ builder.Services.AddSwaggerGen(c =>
             []
         }
     });
+
+    var xmlFileName = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
+    options.IncludeXmlComments(Path.Combine(AppContext.BaseDirectory, xmlFileName));
 });
 
 builder.Services.Configure<JwtSection>(builder.Configuration.GetSection("Jwt"));
@@ -159,7 +163,10 @@ var app = builder.Build();
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
-    app.UseSwaggerUI();
+    app.UseSwaggerUI(c =>
+    {
+        c.SwaggerEndpoint("/swagger/v1/swagger.json", "APICatalogo");
+    });
     app.ConfigureExceptionHandler();
 }
 else

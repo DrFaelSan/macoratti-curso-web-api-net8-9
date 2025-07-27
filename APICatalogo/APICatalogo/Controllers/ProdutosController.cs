@@ -13,6 +13,7 @@ namespace APICatalogo.Controllers;
 
 [Route("[controller]")]
 [ApiController]
+[ApiConventionType(typeof(DefaultApiConventions))]
 public class ProdutosController : ControllerBase
 {
     private readonly IUnitOfWork _uof;
@@ -78,6 +79,10 @@ public class ProdutosController : ControllerBase
         return Ok(produtosDTO);
     }
 
+    ///<summary>
+    ///Exibe uma relação dos produtos
+    ///</summary>
+    ///<returns>Retorna um lista de objetos Produto</returns>
     [HttpGet]
     public async Task<ActionResult<IEnumerable<ProdutoDTO>>> GetAsync()
     {
@@ -85,6 +90,12 @@ public class ProdutosController : ControllerBase
         var produtosDTO = _mapper.Map<IEnumerable<ProdutoDTO>>(produtos);
         return produtosDTO is null ? NotFound("Produtos não encontrados") : Ok(produtosDTO);
     }
+
+    ///<summary>
+    ///Obtem o produto pelo seu identificador id
+    ///</summary>
+    ///<param name="id">Código do produto</param>
+    ///<returns>Um objeto Produto</returns>
 
     [HttpGet("{id:int:min(1)}", Name = "ObterProduto")]
     public async Task<ActionResult<ProdutoDTO>> GetAsync(int id)
@@ -111,6 +122,10 @@ public class ProdutosController : ControllerBase
     }
 
     [HttpPatch("{id}/UpdatePartial")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesDefaultResponseType]
     public async Task<ActionResult<ProdutoDTO>> PatchAsync(int id, JsonPatchDocument<ProdutoDTOUpdateRequest> patchProdutoDTO)
     {
         if (patchProdutoDTO is null || id <= 0) return BadRequest();
@@ -136,6 +151,9 @@ public class ProdutosController : ControllerBase
     }
 
     [HttpPut("{id:int:min(1)}")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(string), StatusCodes.Status400BadRequest)]
+    [ProducesDefaultResponseType]
     public async Task<ActionResult<ProdutoDTO>> PutAsync(int id, ProdutoDTO produtoDto)
     {
         if (id != produtoDto.Id) return BadRequest("Produto inválido.");

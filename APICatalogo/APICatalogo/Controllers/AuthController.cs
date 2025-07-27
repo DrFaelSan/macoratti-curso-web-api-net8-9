@@ -5,7 +5,6 @@ using APICatalogo.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Rewrite;
 using Microsoft.Extensions.Options;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
@@ -25,6 +24,12 @@ public class AuthController : ControllerBase
         => (_tokenService, _userManager, _roleManager, _configuration, _jwtOptions) =
            (tokenService, userManager, roleManager, configuration, jwtOptions.Value);
 
+    ///<summary>
+    ///Verifica as credenciais de um usuário
+    ///</summary>
+    ///<param name="model">Um objeto do tipo UsuarioDTO</param>
+    ///<returns>Status 200 e um token para o cliente</returns>
+    ///<remarks>Retorna o Status 200 e o token</remarks>
     [HttpPost]
     [Route("Login")]
     public async Task<IActionResult> Login([FromBody] LoginModel model)
@@ -66,6 +71,13 @@ public class AuthController : ControllerBase
         return Unauthorized();
     }
 
+
+    ///<summary>
+    ///Registra um novo usuário
+    ///</summary>
+    ///<param name="model">Um objeto UsuarioDTO</param>
+    ///<returns>Status 200</returns>
+    ///<remarks>retorna o Status 200</remarks>
     [HttpPost]
     [Route("register")]
     public async Task<IActionResult> Register([FromBody] RegisterModel model)
